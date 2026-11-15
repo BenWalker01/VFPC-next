@@ -2,6 +2,13 @@
 
 This guide explains how to install the vFPC plugin into EuroScope and configure it for use. The process only needs to be completed once.
 
+## Prerequisite
+
+vFPC is a 32-bit plugin and requires the Microsoft Visual C++ v14 Redistributable
+**x86** runtime, including on 64-bit Windows. Install the latest supported x86
+package from [Microsoft's official downloads page](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+if it is not already installed. The x64 package alone does not satisfy this requirement.
+
 ## Download
 
 vFPC is no longer included with the VATSIM UK Controller Pack.
