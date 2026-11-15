@@ -63,8 +63,8 @@ This document records significant changes in released versions and planned updat
 - vFPC remains a 32-bit EuroScope plugin. Sector support reviews departure flight
   plans; it does not validate aircraft progress through an en-route sector.
 - Public version: `4.1.0`. Windows DLL version: `4.1.0.0`.
-- Requires the Microsoft Visual C++ v14 Redistributable x86 runtime, including
-  on 64-bit Windows. Installation guidance links to the official Microsoft download.
+- If the plugin fails to load due to missing Microsoft C++ runtime files, install
+  the x86 runtime linked in the User Guide.
 - The MATCH/UTFAV even-level constraint remains an unresolved constraint-data
   investigation. No change to its odd/even requirement is included in v4.1.0.
 
