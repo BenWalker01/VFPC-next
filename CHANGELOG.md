@@ -2,6 +2,15 @@
 
 This document records significant changes in released versions and planned updates to vFPC.
 
+## Unreleased
+
+### Fixed
+
+- Controller scope resolves relief callsigns such as `EGSS__GND` and local
+  mentor callsigns such as `EGSS_M_GND` through their base UKCP position when
+  no exact mapping exists. Exact mappings retain priority, sector identifiers
+  are preserved, and local scope still requires one matching airport.
+
 ## 4.1.0 - 15-11-2026
 
 ### Added

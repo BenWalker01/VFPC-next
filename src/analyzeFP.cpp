@@ -4346,16 +4346,35 @@ void CVFPCPlugin::RefreshDepartureAirports_()
 			: fmt::format("{}: UKCP controller scope data unavailable; validation paused. If the problem persists, contact the vFPC team for advice.", callsign);
 	}
 	else {
-		const auto position = controller_scopes_.find(callsign);
+		auto position = controller_scopes_.find(callsign);
+		// UK Division Policy 2.2.d: relief adds one underscore immediately
+		// before the facility suffix. Preserve sector identifiers and honour
+		// exact records, including empty or inconsistent coverage.
+		if (position == controller_scopes_.end() && separator >= 2 && separator != std::string::npos
+			&& callsign[separator - 1] == '_' && callsign[separator - 2] != '_'
+			&& (suffix == "DEL" || suffix == "GND" || suffix == "TWR" || suffix == "APP" || suffix == "CTR")) {
+			std::string base_callsign = callsign;
+			base_callsign.erase(separator, 1);
+			position = controller_scopes_.find(base_callsign);
+		}
+		// Owner-authorised local mentor convention: ICAO_M_DEL/GND/TWR.
+		// Only resolve a four-letter airport prefix; do not strip identifiers
+		// from shared approach or area positions. Coverage is checked below.
+		if (position == controller_scopes_.end() && separator == 6
+			&& callsign.compare(4, 3, "_M_") == 0
+			&& callsign.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ") == 4
+			&& (suffix == "DEL" || suffix == "GND" || suffix == "TWR")) {
+			position = controller_scopes_.find(callsign.substr(0, 4) + "_" + suffix);
+		}
 		if (position == controller_scopes_.end()) {
-			description = fmt::format("{}: no exact UKCP position mapping; validation paused.", callsign);
+			description = fmt::format("{}: no UKCP position mapping for callsign or supported relief/mentor variant; validation paused.", callsign);
 		}
 		else if (position->second.empty()) {
 			description = fmt::format("{}: UKCP top_down is empty; validation paused.", callsign);
 		}
 		else if (suffix == "DEL" || suffix == "GND" || suffix == "TWR") {
 			const std::string airport = callsign.substr(0, callsign.find('_'));
-			// Require agreement between an airport-shaped prefix and the exact UKCP
+			// Require agreement between an airport-shaped prefix and the resolved UKCP
 			// record. Never invent coverage or choose the first of several airports.
 			if (airport.size() == 4 && position->second.size() == 1 && position->second.front() == airport) {
 				selected = position->second;
@@ -4377,6 +4396,8 @@ void CVFPCPlugin::RefreshDepartureAirports_()
 			if (!excluded.empty()) description += fmt::format(" Excluded outside configured coverage: {}. Check Runway Activity.", fmt::join(excluded, ", "));
 		}
 		else description = fmt::format("{}: unsupported position suffix; validation paused.", callsign);
+		if (position != controller_scopes_.end() && position->first != callsign)
+			description += fmt::format(" Callsign variant resolved to UKCP position {}.", position->first);
 	}
 	// Fixed scope comes from a sorted UKCP list; filtered/OBS scope from a sorted
 	// sector scan. Keep sorting explicit because readers use binary_search.
