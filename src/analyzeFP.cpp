@@ -4141,8 +4141,10 @@ std::string CVFPCPlugin::ControllerScopeDescription_() const
 // Read departure-active airports in the host callback and publish a complete scope.
 void CVFPCPlugin::RefreshDepartureAirports_()
 {
+	last_departure_scan_ = std::chrono::steady_clock::now();
 	std::vector<std::string> runway_airports;
 	bool runway_activity_read = true;
+	std::string scan_error;
 	try {
 		SelectActiveSectorfile();
 		for (auto airport = SectorFileElementSelectFirst(EuroScopePlugIn::SECTOR_ELEMENT_AIRPORT);
@@ -4150,19 +4152,16 @@ void CVFPCPlugin::RefreshDepartureAirports_()
 			airport = SectorFileElementSelectNext(airport, EuroScopePlugIn::SECTOR_ELEMENT_AIRPORT)) {
 			const char* name = airport.GetName();
 			const bool departure = airport.IsElementActive(true);
-			const bool arrival = airport.IsElementActive(false);
 			if (departure && name && *name) runway_airports.push_back(norm_icao(name));
-			if (departure || arrival) LOG_INFO("Runway Activity airport='{}' departure_active={} arrival_active={}",
-				name ? name : "", departure, arrival);
 		}
 	}
 	catch (const std::exception& ex) {
 		runway_activity_read = false;
-		LOG_ERROR("Runway Activity airport scan failed: {}", ex.what());
+		scan_error = ex.what();
 	}
 	catch (...) {
 		runway_activity_read = false;
-		LOG_ERROR("Runway Activity airport scan failed: unknown exception");
+		scan_error = "unknown exception";
 	}
 	// Never use a partial scan.
 	if (!runway_activity_read) runway_airports.clear();
@@ -4172,7 +4171,7 @@ void CVFPCPlugin::RefreshDepartureAirports_()
 	std::vector<std::string> selected = std::move(runway_airports);
 	std::string description = runway_activity_read
 		? "Validation scope from departure Runway Activity."
-		: "Unable to read Runway Activity; validation paused.";
+		: fmt::format("Unable to read Runway Activity; validation paused: {}.", scan_error);
 	description += selected.empty() ? " No airports selected for validation."
 		: fmt::format(" Selected airports: {}.", fmt::join(selected, ", "));
 	bool selection_changed, description_changed;
@@ -4192,7 +4191,8 @@ void CVFPCPlugin::RefreshDepartureAirports_()
 	}
 	// Diagnostics are emitted only when the effective scope or explanation changes.
 	if (description_changed) {
-		LOG_INFO("Controller scope: {}", description);
+		if (runway_activity_read) LOG_INFO("Controller scope: {}", description);
+		else LOG_ERROR("Controller scope: {}", description);
 		SendToConsole(vfpc::urgent, "{}", description);
 	}
 	if (!selection_changed) {
@@ -6745,8 +6745,12 @@ void CVFPCPlugin::OnTimer(int Counter)
 			disconnect_cleanup_done_ = false;
 			LOG_INFO("User connected to EuroScope...");
 		}
-		// Resolve scope before accepting completed airport data.
-		if (!departure_selection_initialised_) RefreshDepartureAirports_();
+		// Priming can change activity without the dialog callback.
+		// Refresh before accepting completed airport data.
+		const auto now = std::chrono::steady_clock::now();
+		if (!departure_selection_initialised_ ||
+			now - last_departure_scan_ >= std::chrono::seconds(5))
+			RefreshDepartureAirports_();
 
 		if (pending_ready_.load(std::memory_order_acquire)) {
 			AirportSnapshots completed;

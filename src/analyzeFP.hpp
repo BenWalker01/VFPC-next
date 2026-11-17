@@ -871,6 +871,7 @@ private:
 	mutable std::mutex active_mtx_;
 	std::vector<std::string> departure_airports_; // Sorted, unique ICAOs.
 	bool departure_selection_initialised_ = false;
+	std::chrono::steady_clock::time_point last_departure_scan_{};
 
 	std::string controller_scope_description_ = "Controller scope has not been resolved."; // active_mtx_
 
