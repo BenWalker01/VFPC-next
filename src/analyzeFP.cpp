@@ -6750,7 +6750,9 @@ void CVFPCPlugin::OnTimer(int Counter)
 		const auto now = std::chrono::steady_clock::now();
 		if (!departure_selection_initialised_ ||
 			now - last_departure_scan_ >= std::chrono::seconds(5))
+		{
 			RefreshDepartureAirports_();
+		}
 
 		if (pending_ready_.load(std::memory_order_acquire)) {
 			AirportSnapshots completed;
