@@ -23,9 +23,9 @@ VFR flight plans are not validated.
 
 ## Controller Scope
 
-vFPC validates departures from all airports selected as departure-active in
-EuroScope Runway Activity, regardless of controller callsign or position.
-Multiple airports can be selected.
+vFPC checks eligible IFR departures from airports selected as departure-active
+in EuroScope’s Runway Activity. Airport selection applies regardless of
+controller callsign or position, and you can select more than one airport.
 
 1. Connect to EuroScope.
 2. In **Runway Activity**, enable the airport-level **DEP** selection for each
@@ -41,10 +41,10 @@ select their airport's DEP flag.
 
 vFPC does not filter selections by UKCP coverage or determine operational
 responsibility. A selected airport is in scope even if another controller is
-responsible for it. Flights outside the selected scope display **OFF**;
-in-scope flights waiting for airport data or their own assigned departure runway
-display **PDG**. vFPC requires an assigned runway but does not check whether that
-individual runway is active.
+responsible for it. IFR flights outside the selected scope display **OFF**.
+In-scope IFR flights waiting for airport data or their own assigned departure
+runway display **PDG**. vFPC requires an assigned runway but does not check
+whether that individual runway is active.
 
 ### Support Commands - vFPC Team Advice Only
 

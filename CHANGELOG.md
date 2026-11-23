@@ -2,6 +2,16 @@
 
 This document records significant changes in released versions and planned updates to vFPC.
 
+## Unreleased
+
+### Changed
+
+- vFPC now uses the airport-level **DEP** selections in EuroScope’s Runway
+  Activity to determine which airports are in scope for automatic IFR
+  departure validation. This replaces controller callsign and UKCP coverage
+  filtering. Multiple airports can be selected.
+- Thanks to Ben Walker for the implementation ([PR #42](https://github.com/VFPC/VFPC-next/pull/42)).
+
 ## 4.1.1 - 16-11-2026
 
 ### Fixed
